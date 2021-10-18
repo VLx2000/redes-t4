@@ -75,7 +75,7 @@ class Enlace:
         # apenas pedaços de um quadro, ou um pedaço de quadro seguido de um
         # pedaço de outro, ou vários quadros de uma vez só.
 
-        enviou = False
+        aux_envio = -1
         aux = b''
         if dados.find(b'\xc0') == -1:
             self.lista += dados
@@ -83,14 +83,17 @@ class Enlace:
             for cont,byte in enumerate(dados):
                 if byte == 192:
                     if self.lista + aux != b'':
-                        self.callback(self.lista + aux)
+                        #print('entrou')
+                        self.callback((self.lista + aux).replace(b'\xdb\xdd', b'\xdb').replace(b'\xdb\xdc', b'\xc0'))
                         self.lista = b''
                         aux = b''
-                        enviou = True
+                        aux_envio *= -1
                     self.guardar = False
                 if self.guardar:
                     aux += (byte).to_bytes(1, 'little')
+                    #print(aux)
                 self.guardar = True
-            if not enviou:
+            if aux_envio:
                 self.lista += aux
+            #print(self.lista)
         pass

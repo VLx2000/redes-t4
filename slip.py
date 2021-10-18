@@ -83,11 +83,18 @@ class Enlace:
             for cont,byte in enumerate(dados):
                 if byte == 192:
                     if self.lista + aux != b'':
-                        #print('entrou')
-                        self.callback((self.lista + aux).replace(b'\xdb\xdd', b'\xdb').replace(b'\xdb\xdc', b'\xc0'))
-                        self.lista = b''
-                        aux = b''
-                        aux_envio *= -1
+                        try:
+                            self.callback((self.lista + aux).replace(b'\xdb\xdd', b'\xdb').replace(b'\xdb\xdc', b'\xc0'))
+                        except:
+                            # ignora a exceção, mas mostra na tela
+                            import traceback
+                            traceback.print_exc()
+                        finally:
+                            # faça aqui a limpeza necessária para garantir que não vão sobrar
+                            # pedaços do datagrama em nenhum buffer mantido por você
+                            self.lista = b''
+                            aux = b''
+                            aux_envio *= -1
                     self.guardar = False
                 if self.guardar:
                     aux += (byte).to_bytes(1, 'little')

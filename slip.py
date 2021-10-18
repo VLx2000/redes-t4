@@ -43,12 +43,14 @@ class Enlace:
     def __init__(self, linha_serial):
         self.linha_serial = linha_serial
         self.linha_serial.registrar_recebedor(self.__raw_recv)
+        self.lista = b''
+        self.guardar = True
 
     def registrar_recebedor(self, callback):
         self.callback = callback
 
     def enviar(self, datagrama):
-        # TODO: Preencha aqui com o código para enviar o datagrama pela linha
+        # Preencha aqui com o código para enviar o datagrama pela linha
         # serial, fazendo corretamente a delimitação de quadros e o escape de
         # sequências especiais, de acordo com o protocolo CamadaEnlace (RFC 1055).
         new_data = b''
@@ -60,16 +62,35 @@ class Enlace:
             else:
                 new_data += (byte).to_bytes(1, 'little')
         new_data = b'\xc0' + new_data + b'\xc0'
-        print(new_data)
+        #print(new_data)
         self.linha_serial.enviar(new_data)
         pass
 
     def __raw_recv(self, dados):
-        # TODO: Preencha aqui com o código para receber dados da linha serial.
+        # Preencha aqui com o código para receber dados da linha serial.
         # Trate corretamente as sequências de escape. Quando ler um quadro
         # completo, repasse o datagrama contido nesse quadro para a camada
         # superior chamando self.callback. Cuidado pois o argumento dados pode
         # vir quebrado de várias formas diferentes - por exemplo, podem vir
         # apenas pedaços de um quadro, ou um pedaço de quadro seguido de um
         # pedaço de outro, ou vários quadros de uma vez só.
+
+        enviou = False
+        aux = b''
+        if dados.find(b'\xc0') == -1:
+            self.lista += dados
+        else:
+            for cont,byte in enumerate(dados):
+                if byte == 192:
+                    if self.lista + aux != b'':
+                        self.callback(self.lista + aux)
+                        self.lista = b''
+                        aux = b''
+                        enviou = True
+                    self.guardar = False
+                if self.guardar:
+                    aux += (byte).to_bytes(1, 'little')
+                self.guardar = True
+            if not enviou:
+                self.lista += aux
         pass
